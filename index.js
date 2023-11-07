@@ -26,6 +26,26 @@ async function run() {
     // await client.connect();
     // Send a ping to confirm a successful connection
 
+    const categoriesCollection = client
+      .db("bookifyDB")
+      .collection("categories");
+    const booksCollection = client
+      .db("bookifyDB")
+      .collection("books");
+
+    //   get categories from database
+    app.get("/categories", async (req, res) => {
+      const result = await categoriesCollection.find().toArray();
+      res.send(result);
+    });
+    //   get books from database
+    app.get("/books/:categoryName", async (req, res) => {
+      const name = req.params.categoryName;
+      const query = { category: name };
+      const books = await booksCollection.find(query).toArray();
+      res.send(books);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
