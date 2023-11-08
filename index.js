@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -30,6 +30,9 @@ async function run() {
       .db("bookifyDB")
       .collection("categories");
     const booksCollection = client.db("bookifyDB").collection("books");
+    const borrowedBooksCollection = client
+      .db("bookifyDB")
+      .collection("borrowedBooks");
 
     //   get categories from database
     app.get("/categories", async (req, res) => {
@@ -42,6 +45,40 @@ async function run() {
       const query = { category: name };
       const books = await booksCollection.find(query).toArray();
       res.send(books);
+    });
+
+    // getting single data from database
+    app.get("/bookDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const book = await booksCollection.findOne(query);
+      res.send(book);
+    });
+    // update quantity of borrowed book
+    app.put("/updateQuantity/:id", async (req, res) => {
+      const id = req.params.id;
+      const book = req.body;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedBook = {
+        $set: {
+          quantity: book.qty,
+        },
+      };
+      const result = await booksCollection.updateOne(
+        filter,
+        updatedBook,
+        options
+      );
+      res.send(result);
+    });
+
+    // add borrowed Book to database
+    app.post("/borrowedBooks", async (req, res) => {
+      const borrowedBook = req.body;
+      console.log(borrowedBook);
+      const result = await borrowedBooksCollection.insertOne(borrowedBook);
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
