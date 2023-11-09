@@ -59,12 +59,43 @@ async function run() {
       const book = await booksCollection.findOne(query);
       res.send(book);
     });
+
     // getting single data from database for update
     app.get("/updateBook/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const book = await booksCollection.findOne(query);
       res.send(book);
+    });
+    app.get("/returnedBook/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const book = await booksCollection.findOne(query);
+      res.send(book);
+    });
+
+    // single borrowed book api from database
+    app.get("/borrowedBook", async (req, res) => {
+      const id = req.query.id;
+      const email = req.query.email;
+      query = { id: id, email: email };
+      const result = await borrowedBooksCollection.findOne(query);
+      res.send(result);
+    });
+    //getting user specific borrowed book api from database
+    app.get("/borrowedBooks", async (req, res) => {
+      const email = req.query.email;
+      query = { email: email };
+      const result = await borrowedBooksCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // delete borrowed Book after returning
+    app.delete("/deleteBook/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await borrowedBooksCollection.deleteOne(query);
+      res.send(result);
     });
 
     app.put("/updateBook/:id", async (req, res) => {
@@ -113,6 +144,26 @@ async function run() {
         updatedBook,
         options
       );
+      res.send(result);
+    });
+
+    app.put("/increaseQuantity/:id", async (req, res) => {
+      const id = req.params.id;
+      const book = req.body;
+      console.log(book);
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedBook = {
+        $set: {
+          quantity: book.qty,
+        },
+      };
+      const result = await booksCollection.updateOne(
+        filter,
+        updatedBook,
+        options
+      );
+      console.log(result);
       res.send(result);
     });
 
