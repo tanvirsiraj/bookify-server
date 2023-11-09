@@ -34,6 +34,11 @@ async function run() {
       .db("bookifyDB")
       .collection("borrowedBooks");
 
+    // getting all books from database
+    app.get("/allbooks", async (req, res) => {
+      const result = await booksCollection.find().toArray();
+      res.send(result);
+    });
     //   get categories from database
     app.get("/categories", async (req, res) => {
       const result = await categoriesCollection.find().toArray();
@@ -54,6 +59,44 @@ async function run() {
       const book = await booksCollection.findOne(query);
       res.send(book);
     });
+    // getting single data from database for update
+    app.get("/updateBook/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const book = await booksCollection.findOne(query);
+      res.send(book);
+    });
+
+    app.put("/updateBook/:id", async (req, res) => {
+      const id = req.params.id;
+      const book = req.body;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedBook = {
+        $set: {
+          img: book.img,
+          name: book.name,
+          authorName: book.author,
+          rating: book.rating,
+          category: book.selectedOption,
+        },
+      };
+
+      const result = await booksCollection.updateOne(
+        filter,
+        updatedBook,
+        options
+      );
+      res.send(result);
+    });
+
+    app.post("/addBook", async (req, res) => {
+      const book = req.body;
+      console.log(book);
+      const result = await booksCollection.insertOne(book);
+      res.send(result);
+    });
+
     // update quantity of borrowed book
     app.put("/updateQuantity/:id", async (req, res) => {
       const id = req.params.id;
